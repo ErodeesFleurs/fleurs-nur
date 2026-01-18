@@ -9,33 +9,24 @@ with lib;
 
 let
   cfg = config.home.programs.openstarbound;
-
+  starboundAssetsPath = cfg.starboundAssetsPath;
+  storageDir = cfg.storageDir;
+  logDir = cfg.logDir;
+  modDir = cfg.modDir;
+  extraAssetDirs = cfg.extraAssetDirs;
   openstarboundPackage =
     if cfg.package != null then
       cfg.package
     else
-      let
-        pkgFromPkgs =
-          if builtins.hasAttr "openstarbound" pkgs then
-            pkgs.openstarbound.override {
-              starboundAssetsPath = cfg.starboundAssetsPath;
-              storageDir = cfg.storageDir;
-              logDir = cfg.logDir;
-              modDir = cfg.modDir;
-              extraAssetDirs = cfg.extraAssetDirs;
-            }
-          else
-            pkgs.callPackage ../pkgs/openstarbound {
-              inherit
-                starboundAssetsPath
-                storageDir
-                logDir
-                modDir
-                extraAssetDirs
-                ;
-            };
-      in
-      pkgFromPkgs;
+      pkgs.callPackage ../pkgs/openstarbound {
+        inherit
+          starboundAssetsPath
+          storageDir
+          logDir
+          modDir
+          extraAssetDirs
+          ;
+      };
 in
 {
   options.home.programs.openstarbound = {
@@ -128,14 +119,6 @@ in
 
   config = mkIf cfg.enable {
     home.packages = [ openstarboundPackage ];
-
-    # Add helpful environment variables for the user
-    # Export STARBOUND_ASSETS only when explicitly configured by the user.
-    # Do not override XDG_DATA_HOME or XDG_CONFIG_HOME unconditionally — the
-    # user's environment or other modules should control those.
-    home.sessionVariables = mkIf (cfg.starboundAssetsPath != null) {
-      STARBOUND_ASSETS = cfg.starboundAssetsPath;
-    };
 
     # Optional: Create desktop file if requested
     home.file.".local/share/applications/openstarbound.desktop".text = mkIf cfg.installDesktopFile ''
