@@ -125,6 +125,5 @@ in
 
   meta = {
     maintainers = [ ];
-    doc = ./openstarbound.md;
   };
 }
