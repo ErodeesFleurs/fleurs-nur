@@ -8,7 +8,8 @@
   icoutils,
   zlib,
   zstd,
-  xorg,
+  libsm,
+  libxi,
   glew,
   libpng,
   jemalloc,
@@ -54,8 +55,8 @@ clangStdenv.mkDerivation {
   buildInputs = [
     zlib
     zstd
-    xorg.libSM
-    xorg.libXi
+    libsm
+    libxi
     glew
     libpng
     jemalloc
