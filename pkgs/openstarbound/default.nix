@@ -10,7 +10,8 @@
   makeWrapper,
   zlib,
   zstd,
-  xorg,
+  libsm,
+  libxi,
   glew,
   libpng,
   jemalloc,
@@ -46,7 +47,8 @@ let
       icoutils
       zlib
       zstd
-      xorg
+      libsm
+      libxi
       glew
       libpng
       jemalloc
