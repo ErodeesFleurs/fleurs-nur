@@ -1,0 +1,53 @@
+name: "Check OpenStarbound upstream"
+
+# OpenStarbound is tracked as a pinned nightly rev. This workflow compares
+# the pinned rev against the upstream default branch and opens or updates
+# an issue when upstream has moved, so the package never silently rots.
+
+on:
+  schedule:
+    # Weekly, deliberately off the NUR rebuild window (Mon 02:51 UTC).
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Compare pinned rev with upstream default branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          PINNED=$(sed -n 's/^[[:space:]]*rev = "\([0-9a-fA-F]\{7,\}\)";.*/\1/p' pkgs/openstarbound/game.nix)
+          if [ -z "$PINNED" ]; then
+            echo "::error::Could not read pinned rev from pkgs/openstarbound/game.nix"
+            exit 1
+          fi
+
+          UPSTREAM=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/OpenStarbound/OpenStarbound/commits/HEAD \
+            | jq -r '.sha')
+          UPSTREAM_SHORT="${UPSTREAM:0:${#PINNED}}"
+
+          echo "pinned=$PINNED upstream=$UPSTREAM_SHORT"
+
+          if [ "$PINNED" = "$UPSTREAM_SHORT" ]; then
+            echo "Upstream is unchanged."
+            exit 0
+          fi
+
+          TITLE="OpenStarbound upstream moved to ${UPSTREAM:0:7}"
+          BODY=$(printf 'Upstream default branch is now at `%s`.\n\nThis repo pins `%s` in `pkgs/openstarbound/game.nix` (version string in `wrapper.nix` and `game.nix`).\n\nTo update: bump `rev`, refresh the fetch hash, bump `version` in both files, then rebuild.' "${UPSTREAM:0:7}" "$PINNED")
+
+          EXISTING=$(gh issue list --state open --search "OpenStarbound upstream moved in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi

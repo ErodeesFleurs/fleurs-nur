@@ -2,12 +2,7 @@
   lib,
   stdenv,
   fetchzip,
-  makeWrapper,
 }:
-
-let
-  workdir = "/var/lib/uudeck";
-in
 
 stdenv.mkDerivation rec {
   pname = "uudeck";
@@ -17,13 +12,29 @@ stdenv.mkDerivation rec {
     hash = "sha256-SUp8x+12/7F0ADhw0QEdMx8YHZ1nZzyU/Om3rkX7RXU=";
     stripRoot = false;
   };
-  nativeBuildInputs = [ makeWrapper ];
   installPhase = ''
     mkdir -p $out/{share/uudeck,bin}
     mv * $out/share/uudeck
-    makeWrapper $out/share/uudeck/uuplugin $out/bin/uudeck \
-      --run "! [ -d ${workdir} ] && { mkdir -p ${workdir}; cp $out/share/uudeck/uu.conf ${workdir}; }" \
-      --chdir ${workdir}
+    cat > $out/bin/uudeck <<'WRAPPER'
+    #!/bin/sh
+    # The plugin requires a writable working directory containing its
+    # uu.conf. System/root installs (Steam Deck) share /var/lib/uudeck;
+    # everyone else gets a per-user XDG data directory.
+    set -e
+    if [ -n "$UUDECK_HOME" ]; then :
+    elif [ "$(id -u)" = "0" ] || [ -w /var/lib/uudeck ]; then
+      UUDECK_HOME=/var/lib/uudeck
+    else
+      UUDECK_HOME="''${XDG_DATA_HOME:-$HOME/.local/share}/uudeck"
+    fi
+    if [ ! -d "$UUDECK_HOME" ]; then
+      mkdir -p "$UUDECK_HOME"
+      cp "${placeholder "out"}/share/uudeck/uu.conf" "$UUDECK_HOME"/
+    fi
+    cd "$UUDECK_HOME"
+    exec "${placeholder "out"}/share/uudeck/uuplugin" "$@"
+    WRAPPER
+    chmod +x $out/bin/uudeck
   '';
   meta = {
     description = "NetEase UU game accelerator plugin for Steam Deck (prebuilt x86_64 binary)";

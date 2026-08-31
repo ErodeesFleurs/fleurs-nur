@@ -1,140 +1,27 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+# Home Manager module. Thin wrapper over the shared factory in lib/.
+import ../lib/mk-openstarbound-module.nix {
+  path = [ "home" "programs" ];
+  mkConfig =
+    { lib, cfg, package }:
+    {
+      home.packages = [ package ];
 
-with lib;
+      # Optional: Create desktop file if requested
+      home.file.".local/share/applications/openstarbound.desktop".text =
+        lib.mkIf cfg.installDesktopFile
+          ''
+            [Desktop Entry]
+            Name=OpenStarbound
+            Exec=openstarbound
+            Icon=openstarbound
+            Type=Application
+            Categories=Game;
+            Keywords=starbound;game;multiplayer;
+          '';
 
-let
-  cfg = config.home.programs.openstarbound;
-  starboundAssetsPath = cfg.starboundAssetsPath;
-  storageDir = cfg.storageDir;
-  logDir = cfg.logDir;
-  modDir = cfg.modDir;
-  extraAssetDirs = cfg.extraAssetDirs;
-  openstarboundPackage =
-    if cfg.package != null then
-      cfg.package
-    else
-      pkgs.callPackage ../pkgs/openstarbound {
-        inherit
-          starboundAssetsPath
-          storageDir
-          logDir
-          modDir
-          extraAssetDirs
-          ;
-      };
-in
-{
-  options.home.programs.openstarbound = {
-    enable = mkEnableOption "OpenStarbound, an open-source Starbound client with improvements";
-
-    package = mkOption {
-      type = types.nullOr types.package;
-      default = null;
-      example = literalExpression "pkgs.openstarbound";
-      description = ''
-        The OpenStarbound package to use. If null, a package will be built
-        with the configured paths.
-      '';
+      # Optional: Install icon if requested
+      home.file.".local/share/icons/hicolor/128x128/apps/openstarbound.png".source =
+        lib.mkIf cfg.installIcon
+          "${package}/share/icons/hicolor/128x128/apps/openstarbound.png";
     };
-
-    starboundAssetsPath = mkOption {
-      type = types.nullOr types.str;
-      default = null;
-      example = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-      description = ''
-        Path to Starbound's official game assets.
-
-        Common locations:
-        - Steam: $HOME/.local/share/Steam/steamapps/common/Starbound/assets
-        - Flatpak Steam: $HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Starbound/assets
-
-        If null, uses the default Steam location.
-      '';
-    };
-
-    storageDir = mkOption {
-      type = types.nullOr types.str;
-      default = null;
-      example = "$HOME/.local/share/OpenStarbound/storage";
-      description = ''
-        Directory for game saves and universe data.
-        If null, uses XDG_DATA_HOME/OpenStarbound/storage.
-      '';
-    };
-
-    logDir = mkOption {
-      type = types.nullOr types.str;
-      default = null;
-      example = "$HOME/.local/share/OpenStarbound/logs";
-      description = ''
-        Directory for game log files.
-        If null, uses XDG_DATA_HOME/OpenStarbound/logs.
-      '';
-    };
-
-    modDir = mkOption {
-      type = types.nullOr types.str;
-      default = null;
-      example = "$HOME/.local/share/OpenStarbound/mods";
-      description = ''
-        Directory for custom mods.
-        If null, uses XDG_DATA_HOME/OpenStarbound/mods.
-      '';
-    };
-
-    extraAssetDirs = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      example = [
-        "$HOME/OpenStarbound/custom-assets"
-        "/mnt/shared/starbound-mods"
-      ];
-      description = ''
-        Additional asset directories to load.
-        Useful for workshop content or custom asset packs.
-      '';
-    };
-
-    installDesktopFile = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Whether to install the .desktop file for application menu integration.
-      '';
-    };
-
-    installIcon = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Whether to install the application icon.
-      '';
-    };
-  };
-
-  config = mkIf cfg.enable {
-    home.packages = [ openstarboundPackage ];
-
-    # Optional: Create desktop file if requested
-    home.file.".local/share/applications/openstarbound.desktop".text = mkIf cfg.installDesktopFile ''
-      [Desktop Entry]
-      Name=OpenStarbound
-      Exec=openstarbound
-      Icon=openstarbound
-      Type=Application
-      Categories=Game;
-      Keywords=starbound;game;multiplayer;
-    '';
-
-    # Optional: Install icon if requested
-    home.file.".local/share/icons/hicolor/128x128/apps/openstarbound.png".source =
-      mkIf cfg.installIcon ''
-        ${openstarboundPackage}/share/icons/hicolor/128x128/apps/openstarbound.png
-      '';
-  };
 }
