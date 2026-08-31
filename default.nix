@@ -33,9 +33,8 @@ let
 in
 discoverPackages
 // {
-  # The `lib`, `modules`, and `overlays` names are special
-  # Only include them if they have actual content
-  # lib = import ./lib { inherit pkgs; };
+  # The `modules` and `homeModules` names are special (not packages);
+  # everything else is auto-discovered from pkgs/ above.
   modules = import ./modules;
-  # overlays = import ./overlays;
+  homeModules = import ./home-modules;
 }

@@ -1,75 +1,21 @@
 {
   lib,
+  callPackage,
   makeWrapper,
   clangStdenv,
-  fetchFromGitHub,
-  cmake,
-  pkg-config,
-  imagemagick,
-  icoutils,
-  zlib,
-  zstd,
-  libsm,
-  libxi,
-  glew,
-  libpng,
-  jemalloc,
-  freetype,
-  libvorbis,
-  libopus,
-  sdl3,
-  re2,
-  cpptrace,
-  libcpr,
-  callPackage,
   # optional overrides for paths
   starboundAssetsPath ? null,
   storageDir ? null,
   logDir ? null,
   modDir ? null,
   extraAssetDirs ? [ ],
-  ...
 }:
 
 let
+  # The heavy build (binaries + fallback assets). callPackage injects every
+  # build input from the package set, so no manual forwarding is needed.
+  game = callPackage ./game.nix { };
   version = "nightly-2025-12-12";
-
-  # Import the heavy build (game.nix) from the same directory. The importer
-  # may pass through the same set of build inputs so the heavy derivation
-  # is constructed consistently.
-  game = import ./game.nix {
-    inherit
-      lib
-      fetchFromGitHub
-      callPackage
-      clangStdenv
-      cmake
-      pkg-config
-      imagemagick
-      icoutils
-      zlib
-      zstd
-      libsm
-      libxi
-      glew
-      libpng
-      jemalloc
-      freetype
-      libvorbis
-      libopus
-      sdl3
-      re2
-      cpptrace
-      libcpr
-      ;
-    inherit
-      starboundAssetsPath
-      storageDir
-      logDir
-      modDir
-      extraAssetDirs
-      ;
-  };
 in
 
 clangStdenv.mkDerivation {

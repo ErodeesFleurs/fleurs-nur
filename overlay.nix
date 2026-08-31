@@ -2,9 +2,12 @@
 # case where you don't want to add the whole NUR namespace to your
 # configuration.
 
-self: super:
+final: prev:
 
 let
-  nurPkgs = import ./default.nix { pkgs = super; };
+  inherit (prev) lib;
+  nurPkgs = import ./default.nix { pkgs = prev; };
 in
-nurPkgs
+# Only derivations may leak into the top-level nixpkgs namespace; module
+# sets and other helper attributes stay reachable through the flake.
+lib.filterAttrs (_: v: lib.isDerivation v) nurPkgs

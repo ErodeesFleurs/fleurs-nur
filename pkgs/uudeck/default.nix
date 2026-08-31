@@ -1,4 +1,5 @@
 {
+  lib,
   stdenv,
   fetchzip,
   makeWrapper,
@@ -24,4 +25,8 @@ stdenv.mkDerivation rec {
       --run "! [ -d ${workdir} ] && { mkdir -p ${workdir}; cp $out/share/uudeck/uu.conf ${workdir}; }" \
       --chdir ${workdir}
   '';
+  meta = {
+    description = "NetEase UU game accelerator plugin for Steam Deck (prebuilt x86_64 binary)";
+    platforms = [ "x86_64-linux" ];
+  };
 }
