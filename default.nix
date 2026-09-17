@@ -28,7 +28,12 @@ let
       # Create attrset of packages by calling each with callPackage
       packageSet = lib.mapAttrs (name: _: pkgs.callPackage (pkgsDir + "/${name}") { }) validPackages;
     in
-    packageSet;
+    # Drop packages whose meta.platforms exclude this system. `nix flake check
+    # --all-systems` forces .drvPath of every packages.<system> entry, and
+    # nixpkgs refuses to evaluate a package that is not available on the
+    # requested hostPlatform (e.g. the x86_64-only mycard/uudeck binaries when
+    # evaluating aarch64-linux), which would fail CI.
+    lib.filterAttrs (_: pkg: lib.meta.availableOn pkgs.stdenv.hostPlatform pkg) packageSet;
 
 in
 discoverPackages
