@@ -13,6 +13,14 @@ on:
 jobs:
   check-upstream:
     runs-on: ubuntu-latest
+    # Personal-account repos default to a restricted GITHUB_TOKEN (contents and
+    # packages read only), so `gh issue list`/`create` below fail with
+    # "Resource not accessible by integration". Declaring permissions also
+    # resets every scope not listed to `none` — keep contents: read for the
+    # checkout step.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
