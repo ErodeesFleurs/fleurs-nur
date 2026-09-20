@@ -14,7 +14,7 @@ let
     url = "https://cdncf.moecube.com/downloads/MyCard-${version}.AppImage";
     hash = "sha256-2R+tz8NuSPq5MnFLH0y1CTh4bDz4l7WMzoKz7IRfYJ8=";
   };
-  appimageContents = appimageTools.extractType2 { inherit pname version src; };
+  appimageContents = appimageTools.extract { inherit pname version src; };
 
   # Noto Sans/Serif CJK 2.004 are CFF2 *variable* collections: fontconfig hands
   # Chromium an FC_INDEX that encodes the named instance (e.g. 262146 = 4<<16|2),
