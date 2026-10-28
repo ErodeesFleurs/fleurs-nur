@@ -61,13 +61,23 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Check evaluation
         run: |
-          nix-env -f . -qa \* --meta --xml \
+          # IFD must be able to register source derivations in a cold store.
+          nix-instantiate --eval --strict --json --read-write-mode \
             --allowed-uris https://static.rust-lang.org \
             --option restrict-eval true \
             --option allow-import-from-derivation true \
-            --drv-path --show-trace \
-            -I nixpkgs=$(nix-instantiate --find-file nixpkgs) \
-            -I $PWD
+            --show-trace \
+            -I "nixpkgs=$(nix-instantiate --find-file nixpkgs)" \
+            -I "$PWD" \
+            --expr '
+              let
+                pkgs = import <nixpkgs> { };
+                packages = pkgs.lib.filterAttrs (_: pkg: pkgs.lib.isDerivation pkg) (
+                  import ./. { inherit pkgs; }
+                );
+              in
+              builtins.mapAttrs (_: pkg: { inherit (pkg) drvPath meta; }) packages
+            '
       - name: Flake check
         run: nix flake check --all-systems
       - name: Build nix packages

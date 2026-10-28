@@ -154,9 +154,13 @@ compares the pin against the fork's default branch and opens an issue; it does n
 automatically update or deploy the package.
 
 The imported build definitions require import-from-derivation (IFD), enabled by
-this repository's CI. Both x86_64-linux and aarch64-linux are supported; the caller
-must supply a recent compatible nixpkgs. Steam/Discord SDK integration is not
-enabled by default.
+this repository's CI. Evaluation uses
+`nix-instantiate --eval --strict --json --read-write-mode` to force every package's
+`drvPath` and `meta`, excluding module sets, while retaining restricted evaluation.
+Write access to the Nix store is required to register IFD source derivations in a
+cold store; a read-only `nix-env -qa` query can fail with `.drv is not valid`.
+Both x86_64-linux and aarch64-linux are supported; the caller must supply a recent
+compatible nixpkgs. Steam/Discord SDK integration is not enabled by default.
 
 Run packaging security regressions with:
 
