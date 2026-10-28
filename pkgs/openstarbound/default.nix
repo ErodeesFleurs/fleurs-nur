@@ -6,10 +6,20 @@
   logDir ? null,
   modDir ? null,
   extraAssetDirs ? [ ],
+  installDesktopFile ? true,
+  installIcon ? true,
 }:
 
 # Route through callPackage so nixpkgs injects every build input
 # automatically; the wrapper in turn builds the heavy game derivation.
 callPackage ./wrapper.nix {
-  inherit starboundAssetsPath storageDir logDir modDir extraAssetDirs;
+  inherit
+    starboundAssetsPath
+    storageDir
+    logDir
+    modDir
+    extraAssetDirs
+    installDesktopFile
+    installIcon
+    ;
 }

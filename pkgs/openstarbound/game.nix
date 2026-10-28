@@ -1,123 +1,34 @@
-{
-  lib,
-  fetchFromGitHub,
-  clangStdenv,
-  cmake,
-  pkg-config,
-  imagemagick,
-  icoutils,
-  zlib,
-  zstd,
-  libsm,
-  libxi,
-  glew,
-  libpng,
-  jemalloc,
-  freetype,
-  libvorbis,
-  libopus,
-  sdl3,
-  re2,
-  cpptrace,
-  libcpr,
-  callPackage,
-  ...
-}:
+{ pkgs, fetchFromGitHub }:
 
 let
-  imgui = callPackage ../imgui { };
-  version = "nightly-2025-12-12";
-  rev = "f0abd78";
-in
-
-clangStdenv.mkDerivation {
-  pname = "openstarbound-game";
-  inherit version;
-
+  rev = "bb6eb63b7776d4aa543d69f7b151edad1be78373";
   src = fetchFromGitHub {
-    owner = "OpenStarbound";
+    owner = "ErodeesFleurs";
     repo = "OpenStarbound";
     inherit rev;
-    fetchSubmodules = false;
-    # Keep the same hash as upstream packaging; update if upstream changes.
-    hash = "sha256-kXAZdwppiWSbWzYsjAT+O12kVxolDwGKTGhl0YlzGfs=";
+    hash = "sha256-oUCvmk7edAYrX2dXrWvnqZcjp7k6IbzCb3G0C9oXoLc=";
   };
-
-  sourceRoot = "source/source";
-
-  nativeBuildInputs = [
-    cmake
-    pkg-config
-    imagemagick
-    icoutils
-  ];
-
-  buildInputs = [
-    zlib
-    zstd
-    libsm
-    libxi
-    glew
-    libpng
-    jemalloc
-    freetype
-    libvorbis
-    libopus
-    sdl3
-    re2
-    cpptrace
-    libcpr
-  ]
-  ++ lib.optionals (imgui != null) [ imgui ];
-
-  cmakeFlags = [
-    (lib.cmakeFeature "CMAKE_BUILD_TYPE" "Release")
-    (lib.cmakeBool "STAR_USE_JEMALLOC" true)
-  ];
-
-  postPatch = ''
-    # Use repository-provided replacement CMakeLists if present; tolerate absence.
-    cp ${./patches/CMakeLists.txt} CMakeLists.txt 2>/dev/null || true
-    mkdir -p dist || true
-  '';
-
-  enableParallelBuilding = true;
-
-  installPhase = ''
-    runHook preInstall
-
-    # Basic layout for runtime files
-    mkdir -p $out/libexec/openstarbound $out/share/openstarbound
-
-    # copy build artifacts if present (some builds may place files in ../dist)
-    cp -r ../dist/* $out/libexec/openstarbound/ >/dev/null 2>&1 || true
-
-    # Ensure main binary is installed and executable
-    if [ -f ../dist/starbound ]; then
-      install -Dm755 ../dist/starbound $out/libexec/openstarbound/starbound
-    elif [ -f $out/libexec/openstarbound/starbound ]; then
-      chmod +x $out/libexec/openstarbound/starbound || true
-    fi
-
-    # Install repository-provided fallback assets (optional)
-    if [ -d ../../assets ]; then
-      mkdir -p $out/share/openstarbound/assets
-      cp -r ../../assets/* $out/share/openstarbound/ || true
-    fi
-
-    # Install optional icon
-    if [ -f ../client/icon.png ]; then
-      mkdir -p $out/share/icons/hicolor/128x128/apps
-      cp ../client/icon.png $out/share/icons/hicolor/128x128/apps/openstarbound.png || true
-    fi
-
-    runHook postInstall
-  '';
-
-  meta = {
-    description = "OpenStarbound game build (heavy) - binaries and fallback assets";
-    homepage = "https://github.com/OpenStarbound/OpenStarbound";
-    platforms = lib.platforms.linux;
-    maintainers = [ ];
+  dependencies = import "${src}/nix/dependencies.nix" { inherit pkgs; };
+in
+# Keep the compiler, static C++ dependencies, Lua patches and checks together.
+# Replacing upstream's CMakeLists breaks this fork's C++23/runtime contract.
+(pkgs.callPackage "${src}/nix/openstarbound.nix" {
+  inherit src dependencies;
+  stdenv = dependencies.stdenv;
+  sourceIdentifier = builtins.substring 0 7 rev;
+}).overrideAttrs (old: {
+  # Upstream exports every executable symbol. Its static mimalloc new operators
+  # then interpose on Mesa/LLVM's libstdc++ without matching scalar deletes,
+  # causing an invalid free during GL driver initialization.
+  env = (old.env or { }) // {
+    NIX_LDFLAGS = (old.env.NIX_LDFLAGS or "") + " --exclude-libs=ALL";
   };
-}
+  # Only the final package installs game launchers. Do not leave the upstream
+  # JSON-interpolating/shared-config scripts reachable through passthru.heavy.
+  postInstall = (old.postInstall or "") + ''
+    rm "$out/bin/starbound" "$out/bin/starbound_server"
+  '';
+  meta = builtins.removeAttrs old.meta [ "mainProgram" ] // {
+    homepage = "https://github.com/ErodeesFleurs/OpenStarbound";
+  };
+})

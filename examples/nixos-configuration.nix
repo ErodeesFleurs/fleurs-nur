@@ -3,7 +3,7 @@
 # This file demonstrates various ways to configure OpenStarbound
 # using the programs.openstarbound module.
 
-{ ... }:
+{ pkgs, config, ... }:
 
 {
   # ============================================================================
@@ -14,9 +14,10 @@
     enable = true;
     # Uses default paths:
     # - Assets: $HOME/.local/share/Steam/steamapps/common/Starbound/assets
-    # - Storage: $HOME/.local/share/OpenStarbound/storage
-    # - Logs: $HOME/.local/share/OpenStarbound/logs
-    # - Mods: $HOME/.local/share/OpenStarbound/mods
+    # - Storage: $XDG_DATA_HOME/OpenStarbound/storage
+    # - Logs: $XDG_DATA_HOME/OpenStarbound/logs
+    # - Mods: $XDG_DATA_HOME/OpenStarbound/mods
+    # XDG_DATA_HOME defaults to $HOME/.local/share.
   };
 
   # ============================================================================
@@ -92,7 +93,7 @@
 
   # programs.openstarbound = {
   #   enable = true;
-  #   # Automatically uses Steam's install location
+  #   # Uses the default Steam asset path (not automatic install discovery)
   # };
 
   # Additional gaming optimizations
@@ -132,8 +133,12 @@
   # programs.openstarbound.enable = true;
 
   # Users can override paths with environment variables:
-  # export STARBOUND_ASSETS="/custom/path"
+  # export OPENSTARBOUND_ASSETS="/custom/path"
+  # export OPENSTARBOUND_STORAGE="$HOME/game-saves"
+  # export OPENSTARBOUND_LOGS="$HOME/game-logs"
+  # export OPENSTARBOUND_MODS="$HOME/game-mods"
   # export XDG_DATA_HOME="$HOME/.local/share"
+  # OPENSTARBOUND_ASSETS replaces the former STARBOUND_ASSETS variable.
 
   # ============================================================================
   # Example 10: Conditional Configuration (Per-Machine)
@@ -151,7 +156,8 @@
   # Additional Useful Configurations
   # ============================================================================
 
-  # Allow unfree packages (required for some dependencies)
+  # Steam itself requires allowing its unfree license; the engine package
+  # does not supply the commercial Starbound assets.
   # nixpkgs.config.allowUnfree = true;
 
   # Install useful gaming utilities
@@ -172,7 +178,8 @@
   # ============================================================================
 
   # 1. You need to own and install Starbound (usually via Steam)
-  # 2. Paths with $HOME are expanded at runtime for each user
+  # 2. Only leading $HOME, ${HOME}, ~/, $XDG_DATA_HOME and ${XDG_DATA_HOME}
+  #    expand at runtime; other text is literal, never evaluated as shell code.
   # 3. Rebuild your system after changes: sudo nixos-rebuild switch
   # 4. Launch from app menu or run: openstarbound
   # 5. Check logs if issues occur: ~/.local/share/OpenStarbound/logs/

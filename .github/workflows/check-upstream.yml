@@ -31,16 +31,20 @@ jobs:
         run: |
           set -euo pipefail
 
-          PINNED=$(sed -n 's/^[[:space:]]*rev = "\([0-9a-fA-F]\{7,\}\)";.*/\1/p' pkgs/openstarbound/game.nix)
-          if [ -z "$PINNED" ]; then
-            echo "::error::Could not read pinned rev from pkgs/openstarbound/game.nix"
+          PINNED=$(sed -n 's/^[[:space:]]*rev = "\([0-9a-fA-F]\{40\}\)";.*/\1/p' pkgs/openstarbound/game.nix)
+          if [[ ! "$PINNED" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Expected one full pinned SHA in pkgs/openstarbound/game.nix"
             exit 1
           fi
 
           UPSTREAM=$(curl -fsSL \
             -H "Authorization: Bearer $GH_TOKEN" \
-            https://api.github.com/repos/OpenStarbound/OpenStarbound/commits/HEAD \
-            | jq -r '.sha')
+            https://api.github.com/repos/ErodeesFleurs/OpenStarbound/commits/HEAD \
+            | jq -er '.sha | select(type == "string")')
+          if [[ ! "$UPSTREAM" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Fork API did not return a full commit SHA"
+            exit 1
+          fi
           UPSTREAM_SHORT="${UPSTREAM:0:${#PINNED}}"
 
           echo "pinned=$PINNED upstream=$UPSTREAM_SHORT"
@@ -51,7 +55,7 @@ jobs:
           fi
 
           TITLE="OpenStarbound upstream moved to ${UPSTREAM:0:7}"
-          BODY=$(printf 'Upstream default branch is now at `%s`.\n\nThis repo pins `%s` in `pkgs/openstarbound/game.nix` (version string in `wrapper.nix` and `game.nix`).\n\nTo update: bump `rev`, refresh the fetch hash, bump `version` in both files, then rebuild.' "${UPSTREAM:0:7}" "$PINNED")
+          BODY=$(printf 'ErodeesFleurs/OpenStarbound default branch is now at `%s`.\n\nThis repo pins `%s` in `pkgs/openstarbound/game.nix`; the package version is inherited from the pinned build definition.\n\nTo update: bump `rev`, refresh the fetch hash, review the fork build inputs and wrapper compatibility, then rebuild and run `openstarbound.tests.launcher`.' "$UPSTREAM" "$PINNED")
 
           EXISTING=$(gh issue list --state open --search "OpenStarbound upstream moved in:title" --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING" ]; then

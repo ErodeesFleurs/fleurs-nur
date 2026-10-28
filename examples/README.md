@@ -4,7 +4,6 @@ This directory contains example configurations for using packages from fleurs-nu
 
 ## Contents
 
-- [`openstarbound-custom-paths.nix`](./openstarbound-custom-paths.nix) - Package-level customization examples
 - [`nixos-configuration.nix`](./nixos-configuration.nix) - NixOS module configuration examples
 - [`flake-example.nix`](./flake-example.nix) - Complete flake.nix example with module integration
 
@@ -41,14 +40,14 @@ For more control over the package:
 { pkgs, ... }:
 {
   nixpkgs.overlays = [
-    (import (builtins.fetchTarball "https://github.com/ErodeesFleurs/fleurs-nur/archive/master.tar.gz") + "/overlay.nix")
+    (import ((builtins.fetchTarball "https://github.com/ErodeesFleurs/fleurs-nur/archive/master.tar.gz") + "/overlay.nix"))
   ];
 
   environment.systemPackages = [
-    (pkgs.openstarbound.withPaths {
-      starboundAssets = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-      storage = "$HOME/.local/share/OpenStarbound/storage";
-      mods = "$HOME/.local/share/OpenStarbound/mods";
+    (pkgs.openstarbound.override {
+      starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
+      storageDir = "$HOME/.local/share/OpenStarbound/storage";
+      modDir = "$HOME/.local/share/OpenStarbound/mods";
     })
   ];
 }
@@ -102,19 +101,15 @@ pkgs.openstarbound.override {
 }
 ```
 
-### Using Convenience Function
+Use `.override`; there is no `withPaths` convenience function.
+With either module, a non-null `package` is used unchanged, so apply path and
+desktop metadata options to that package with `.override`.
 
-The `withPaths` function provides cleaner syntax:
-
-```nix
-pkgs.openstarbound.withPaths {
-  starboundAssets = "/path/to/assets";
-  storage = "/path/to/storage";
-  logs = "/path/to/logs";
-  mods = "/path/to/mods";
-  extraAssets = [ "/extra/assets" ];
-}
-```
+Defaults preserve `$XDG_DATA_HOME/OpenStarbound/{storage,logs,mods}` (capital O/S),
+falling back to `$HOME/.local/share/OpenStarbound`. Runtime overrides and literal
+path-prefix handling are documented in the [packaging guide](../README.md#paths-and-runtime-overrides).
+The package owns desktop/icon files; no manual Home Manager `home.file` entries
+are required.
 
 ## Common Scenarios
 

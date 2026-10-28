@@ -28,6 +28,8 @@ let
           logDir
           modDir
           extraAssetDirs
+          installDesktopFile
+          installIcon
           ;
       };
 
@@ -36,7 +38,13 @@ let
     lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
-      inherit example description;
+      inherit example;
+      description = description + ''
+
+        Paths support literal leading $HOME, ''${HOME}, ~/,
+        $XDG_DATA_HOME or ''${XDG_DATA_HOME}. All other text is literal;
+        shell expressions are never evaluated.
+      '';
     };
 in
 {
@@ -50,7 +58,8 @@ in
         example = lib.literalExpression "pkgs.openstarbound";
         description = ''
           The OpenStarbound package to use. If null, a package will be built
-          with the configured paths.
+          with all options below. A custom package is used unchanged; configure
+          its paths and desktop metadata with package.override instead.
         '';
       };
 
@@ -62,21 +71,25 @@ in
         - Flatpak Steam: $HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Starbound/assets
 
         If null, uses the default Steam location.
+        OPENSTARBOUND_ASSETS overrides this option at runtime.
       '';
 
       storageDir = mkPathOption "$HOME/.local/share/OpenStarbound/storage" ''
         Directory for game saves and universe data.
         If null, uses XDG_DATA_HOME/OpenStarbound/storage.
+        OPENSTARBOUND_STORAGE overrides this option at runtime.
       '';
 
       logDir = mkPathOption "$HOME/.local/share/OpenStarbound/logs" ''
         Directory for game log files.
         If null, uses XDG_DATA_HOME/OpenStarbound/logs.
+        OPENSTARBOUND_LOGS overrides this option at runtime.
       '';
 
       modDir = mkPathOption "$HOME/.local/share/OpenStarbound/mods" ''
         Directory for custom mods.
         If null, uses XDG_DATA_HOME/OpenStarbound/mods.
+        OPENSTARBOUND_MODS overrides this option at runtime.
       '';
 
       extraAssetDirs = lib.mkOption {
@@ -87,8 +100,11 @@ in
           "/mnt/shared/starbound-mods"
         ];
         description = ''
-          Additional asset directories to load.
-          Useful for workshop content or custom asset packs.
+          Additional asset directories to load after the commercial assets
+          and bundled opensb assets, and before the mods directory.
+          Paths support only literal leading $HOME, ''${HOME}, ~/,
+          $XDG_DATA_HOME or ''${XDG_DATA_HOME}; other text is literal.
+          No shell expressions are evaluated.
         '';
       };
 
