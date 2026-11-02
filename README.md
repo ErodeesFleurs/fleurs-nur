@@ -79,7 +79,7 @@ Available options
 ## OpenStarbound packaging
 
 The engine is pinned to the [ErodeesFleurs/OpenStarbound fork](https://github.com/ErodeesFleurs/OpenStarbound)
-at full revision `bb6eb63b7776d4aa543d69f7b151edad1be78373`.
+at full revision `aa76d4f58c0ab6841e0326a290600d8e59b39fcd`.
 `pkgs/openstarbound/game.nix` defines the source pin; the version is inherited
 from the pinned source's `nix/openstarbound.nix`, not duplicated in the wrapper.
 Packaging imports that source's `nix/dependencies.nix` and `nix/openstarbound.nix`
