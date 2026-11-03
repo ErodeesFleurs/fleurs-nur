@@ -96,6 +96,15 @@ distributed by this package; you must own Starbound and provide its assets.
 The default asset location is
 `$HOME/.local/share/Steam/steamapps/common/Starbound/assets`.
 
+On x86_64, the package enables the pinned engine's Steam and Discord integrations.
+The caller's unfree allowlist must include `openstarbound` and
+`openstarbound-sdks`; a global `allowUnfree = true` is not required. SDK versions
+follow the engine source pin:
+editing another local engine checkout does not update the published package.
+Standalone client launchers default `SteamAppId` to Starbound's `211820` and
+preserve a nonempty inherited value. Keep Steam and the Discord desktop client
+running for their respective integrations; Steam also requires owning Starbound.
+
 ### Paths and runtime overrides
 
 Writable defaults remain `$XDG_DATA_HOME/OpenStarbound/{storage,logs,mods}`,
@@ -160,7 +169,8 @@ this repository's CI. Evaluation uses
 Write access to the Nix store is required to register IFD source derivations in a
 cold store; a read-only `nix-env -qa` query can fail with `.drv is not valid`.
 Both x86_64-linux and aarch64-linux are supported; the caller must supply a recent
-compatible nixpkgs. Steam/Discord SDK integration is not enabled by default.
+compatible nixpkgs. ARM64 builds remain SDK-free because the vendored Linux SDKs
+only provide x86_64 binaries.
 
 Run packaging security regressions with:
 

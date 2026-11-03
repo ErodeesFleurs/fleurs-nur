@@ -4,6 +4,10 @@ export PATH="@runtimePath@${PATH:+:$PATH}"
 
 binary="@game@/libexec/${0##*/}"
 [[ ${0##*/} != openstarbound ]] || binary="@game@/libexec/starbound"
+# Standalone launches do not inherit Steam's application identity.
+if [[ ${binary##*/} == starbound ]]; then
+  export SteamAppId="${SteamAppId:-211820}"
+fi
 for arg in "$@"; do
   case "$arg" in
     --) break ;;
