@@ -79,7 +79,7 @@ Available options
 ## OpenStarbound packaging
 
 The engine is pinned to the [ErodeesFleurs/OpenStarbound fork](https://github.com/ErodeesFleurs/OpenStarbound)
-at full revision `ef14703457c04859c484f0a587cdabdba67678d8`.
+at full revision `fc402e09bdae1ba5677300386f455d062f3b053d`.
 `pkgs/openstarbound/game.nix` defines the source pin; the version is inherited
 from the pinned source's `nix/openstarbound.nix`, not duplicated in the wrapper.
 Packaging imports that source's `nix/dependencies.nix` and `nix/openstarbound.nix`
@@ -132,7 +132,7 @@ literal interpolation prefix as `''${HOME}`; in double-quoted Nix strings use
 
 Boot configuration is serialized with `jq`, preserving quotes, backslashes and
 other JSON-sensitive characters without evaluating path contents. Asset scan order
-is commercial assets, bundled `opensb`, `extraAssetDirs` in order, then mods;
+is commercial assets, bundled `opensb` and `opensb-compat`, `extraAssetDirs` in order, then mods;
 the engine also applies asset metadata priorities and dependencies.
 `openstarbound`, `starbound` and `starbound_server` use the wrapper;
 `--print-bootconfig` prints its generated configuration. An explicit
