@@ -1,6 +1,6 @@
 # Example flake.nix; add your host hardware and boot configuration before use.
 {
-  description = "NixOS and Home Manager OpenStarbound examples";
+  description = "NixOS and Home Manager Asterbound examples";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -17,18 +17,26 @@
   outputs = { nixpkgs, fleurs-nur, home-manager, ... }:
     let
       system = "x86_64-linux";
+      allowAsterbound = p:
+        builtins.elem (nixpkgs.lib.getName p) [ "asterbound" "openstarbound-sdks" ];
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfreePredicate = allowAsterbound;
+        overlays = [ fleurs-nur.overlays.default ];
+      };
     in {
       nixosConfigurations = {
         my-desktop = nixpkgs.lib.nixosSystem {
           inherit system;
           modules = [
-            fleurs-nur.nixosModules.openstarbound
+            fleurs-nur.nixosModules.asterbound
             {
-              programs.openstarbound = {
+              nixpkgs.config.allowUnfreePredicate = allowAsterbound;
+              programs.asterbound = {
                 enable = true;
                 starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-                # Null writable paths preserve XDG_DATA_HOME/OpenStarbound.
-                # storageDir = "/mnt/games/OpenStarbound/storage";
+                # Null writable paths use independent XDG_DATA_HOME/asterbound directories.
+                # storageDir = "/mnt/games/asterbound/storage";
                 installDesktopFile = true;
                 installIcon = true;
               };
@@ -40,11 +48,12 @@
           inherit system;
           modules = [
             ({ pkgs, ... }: {
+              nixpkgs.config.allowUnfreePredicate = allowAsterbound;
               nixpkgs.overlays = [ fleurs-nur.overlays.default ];
               environment.systemPackages = [
-                (pkgs.openstarbound.override {
+                (pkgs.asterbound.override {
                   starboundAssetsPath = "$HOME/Games/Starbound/assets";
-                  storageDir = "$XDG_DATA_HOME/OpenStarbound/storage";
+                  storageDir = "$XDG_DATA_HOME/asterbound/storage";
                 })
               ];
             })
@@ -56,17 +65,18 @@
           modules = [
             home-manager.nixosModules.home-manager
             {
+              nixpkgs.config.allowUnfreePredicate = allowAsterbound;
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.alice = {
-                imports = [ fleurs-nur.homeModules.openstarbound ];
+                imports = [ fleurs-nur.homeModules.asterbound ];
                 home.username = "alice";
                 home.homeDirectory = "/home/alice";
                 # Choose this for your existing Home Manager installation.
                 home.stateVersion = "25.11";
-                home.programs.openstarbound = {
+                home.programs.asterbound = {
                   enable = true;
-                  extraAssetDirs = [ "$HOME/OpenStarbound/workshop-content" ];
+                  extraAssetDirs = [ "$HOME/asterbound/workshop-content" ];
                 };
               };
             }
@@ -74,8 +84,8 @@
         };
       };
 
-      devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
-        packages = [ fleurs-nur.packages.${system}.openstarbound ];
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [ pkgs.asterbound ];
       };
     };
 }

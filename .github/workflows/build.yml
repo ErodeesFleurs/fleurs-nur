@@ -71,7 +71,10 @@ jobs:
             -I "$PWD" \
             --expr '
               let
-                pkgs = import <nixpkgs> { };
+                pkgs = import <nixpkgs> {
+                  config.allowUnfreePredicate = pkg:
+                    builtins.elem (pkgs.lib.getName pkg) [ "asterbound" "openstarbound-sdks" ];
+                };
                 packages = pkgs.lib.filterAttrs (_: pkg: pkgs.lib.isDerivation pkg) (
                   import ./. { inherit pkgs; }
                 );
@@ -79,7 +82,7 @@ jobs:
               builtins.mapAttrs (_: pkg: { inherit (pkg) drvPath meta; }) packages
             '
       - name: Flake check
-        run: nix flake check --all-systems
+        run: NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --all-systems
       - name: Build nix packages
         run: nix shell -f '<nixpkgs>' nix-build-uncached -c nix-build-uncached ci.nix -A cacheOutputs
       - name: Trigger NUR update

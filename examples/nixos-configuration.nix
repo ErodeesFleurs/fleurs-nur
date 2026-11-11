@@ -1,7 +1,7 @@
-# Example NixOS configurations using the OpenStarbound module
+# Example NixOS configurations using the Asterbound module
 #
-# This file demonstrates various ways to configure OpenStarbound
-# using the programs.openstarbound module.
+# This file demonstrates various ways to configure Asterbound
+# using the programs.asterbound module.
 
 { pkgs, config, ... }:
 
@@ -10,21 +10,23 @@
   # Example 1: Basic Configuration (Recommended for most users)
   # ============================================================================
 
-  programs.openstarbound = {
+  programs.asterbound = {
     enable = true;
     # Uses default paths:
-    # - Assets: $HOME/.local/share/Steam/steamapps/common/Starbound/assets
-    # - Storage: $XDG_DATA_HOME/OpenStarbound/storage
-    # - Logs: $XDG_DATA_HOME/OpenStarbound/logs
-    # - Mods: $XDG_DATA_HOME/OpenStarbound/mods
+    # - Assets: $XDG_DATA_HOME/asterbound/assets
+    # - Storage: $XDG_DATA_HOME/asterbound/storage
+    # - Logs: $XDG_DATA_HOME/asterbound/logs
+    # - Mods: $XDG_DATA_HOME/asterbound/mods
     # XDG_DATA_HOME defaults to $HOME/.local/share.
+    # ASTERBOUND_RUNTIME_DIR, when set, selects the runtime data root instead.
+    # Copy owned commercial assets there or set starboundAssetsPath explicitly.
   };
 
   # ============================================================================
   # Example 2: Flatpak Steam Configuration
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
   #   starboundAssetsPath = "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Starbound/assets";
   # };
@@ -33,24 +35,24 @@
   # Example 3: External Storage Configuration
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
   #   starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-  #   storageDir = "/mnt/games/OpenStarbound/storage";
-  #   logDir = "/mnt/games/OpenStarbound/logs";
-  #   modDir = "/mnt/games/OpenStarbound/mods";
+  #   storageDir = "/mnt/games/asterbound/storage";
+  #   logDir = "/mnt/games/asterbound/logs";
+  #   modDir = "/mnt/games/asterbound/mods";
   # };
 
   # ============================================================================
   # Example 4: Multiple Asset Directories (Workshop + Custom Mods)
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
   #   starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
   #   extraAssetDirs = [
-  #     "$HOME/OpenStarbound/workshop-content"
-  #     "$HOME/OpenStarbound/custom-assets"
+  #     "$HOME/asterbound/workshop-content"
+  #     "$HOME/asterbound/custom-assets"
   #     "/mnt/shared/starbound-community-mods"
   #   ];
   # };
@@ -59,7 +61,7 @@
   # Example 5: Development Setup
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
   #   starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
   #   storageDir = "$HOME/Development/starbound-test/saves";
@@ -74,9 +76,9 @@
   # Example 6: Custom Package
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
-  #   package = pkgs.openstarbound.override {
+  #   package = pkgs.asterbound.override {
   #     # Custom build options if needed
   #   };
   # };
@@ -91,9 +93,9 @@
   #   remotePlay.openFirewall = true;
   # };
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
-  #   # Uses the default Steam asset path (not automatic install discovery)
+  #   starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
   # };
 
   # Additional gaming optimizations
@@ -108,7 +110,7 @@
   # ============================================================================
 
   # For a dedicated Starbound server setup
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = true;
   #   starboundAssetsPath = "/srv/starbound/assets";
   #   storageDir = "/srv/starbound/storage";
@@ -129,22 +131,22 @@
   # Example 9: Multi-User Setup
   # ============================================================================
 
-  # Enable OpenStarbound for all users
-  # programs.openstarbound.enable = true;
+  # Enable Asterbound for all users
+  # programs.asterbound.enable = true;
 
   # Users can override paths with environment variables:
-  # export OPENSTARBOUND_ASSETS="/custom/path"
-  # export OPENSTARBOUND_STORAGE="$HOME/game-saves"
-  # export OPENSTARBOUND_LOGS="$HOME/game-logs"
-  # export OPENSTARBOUND_MODS="$HOME/game-mods"
+  # export ASTERBOUND_ASSETS="/custom/path"
+  # export ASTERBOUND_STORAGE="$HOME/game-saves"
+  # export ASTERBOUND_LOGS="$HOME/game-logs"
+  # export ASTERBOUND_MODS="$HOME/game-mods"
   # export XDG_DATA_HOME="$HOME/.local/share"
-  # OPENSTARBOUND_ASSETS replaces the former STARBOUND_ASSETS variable.
+  # ASTERBOUND_RUNTIME_DIR overrides the runtime data root (assets/storage/logs/mods).
 
   # ============================================================================
   # Example 10: Conditional Configuration (Per-Machine)
   # ============================================================================
 
-  # programs.openstarbound = {
+  # programs.asterbound = {
   #   enable = (config.networking.hostName == "gaming-pc");
   #   starboundAssetsPath =
   #     if config.networking.hostName == "gaming-pc"
@@ -156,9 +158,10 @@
   # Additional Useful Configurations
   # ============================================================================
 
-  # Steam itself requires allowing its unfree license; the engine package
-  # does not supply the commercial Starbound assets.
-  # nixpkgs.config.allowUnfree = true;
+  # Asterbound and the upstream SDK derivation need selective unfree permission.
+  # Steam itself needs separate permission if enabled; commercial assets are not included.
+  nixpkgs.config.allowUnfreePredicate = p:
+    builtins.elem (pkgs.lib.getName p) [ "asterbound" "openstarbound-sdks" ];
 
   # Install useful gaming utilities
   # environment.systemPackages = with pkgs; [
@@ -181,6 +184,6 @@
   # 2. Only leading $HOME, ${HOME}, ~/, $XDG_DATA_HOME and ${XDG_DATA_HOME}
   #    expand at runtime; other text is literal, never evaluated as shell code.
   # 3. Rebuild your system after changes: sudo nixos-rebuild switch
-  # 4. Launch from app menu or run: openstarbound
-  # 5. Check logs if issues occur: ~/.local/share/OpenStarbound/logs/
+  # 4. Launch from app menu or run: asterbound
+  # 5. Check logs if issues occur: ~/.local/share/asterbound/logs/
 }

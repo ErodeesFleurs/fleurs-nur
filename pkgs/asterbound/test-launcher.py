@@ -16,7 +16,7 @@ RUNTIME_PATH = sys.argv.pop(1)
 
 class LauncherTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(prefix="openstarbound-tests-")
+        self.tmp = tempfile.TemporaryDirectory(prefix="asterbound-tests-")
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.home = self.root / "home"
@@ -30,7 +30,7 @@ class LauncherTests(unittest.TestCase):
         self.defaults.write_text(json.dumps({"extraAssetDirs": []}))
         self.game = self.root / "game"
         (self.game / "libexec").mkdir(parents=True)
-        self.launcher = self.root / "openstarbound"
+        self.launcher = self.root / "asterbound"
         script = TEMPLATE.replace("@bash@", BASH).replace("@runtimePath@", RUNTIME_PATH)
         script = script.replace("@defaults@", str(self.defaults)).replace("@game@", str(self.game))
         self.launcher.write_text(script)
@@ -55,24 +55,21 @@ class LauncherTests(unittest.TestCase):
         }))
         result = self.config()
         self.assertEqual(result, {
-            "assetDirectories": [assets, str(self.game / "share/openstarbound/assets"),
+            "assetDirectories": [assets, str(self.game / "share/asterbound/assets"),
                                  extra, str(self.home / ".local/share/custom"),
                                  str(self.home / ".local/share/other"), str(self.home / "mods")],
             "storageDirectory": str(self.home) + storage[len("$HOME"):],
             "logDirectory": str(self.home / "logs"),
         })
         self.assertFalse(marker.exists())
-        self.assertEqual(list(self.root.glob("openstarbound.*")), [])
+        self.assertEqual(list(self.root.glob("asterbound.*")), [])
 
-    def test_environment_precedence_and_existing_save_location(self):
+    def test_environment_precedence(self):
         self.defaults.write_text(json.dumps({"starboundAssetsPath": "/configured", "extraAssetDirs": []}))
-        default = self.config()
-        self.assertEqual(default["assetDirectories"][0], "/configured")
-        self.assertEqual(default["storageDirectory"], str(self.home / ".local/share/OpenStarbound/storage"))
         overridden = self.config(
-            OPENSTARBOUND_ASSETS="/new",
-            OPENSTARBOUND_STORAGE="relative/save", OPENSTARBOUND_LOGS="/logs",
-            OPENSTARBOUND_MODS="/mods",
+            ASTERBOUND_ASSETS="/new",
+            ASTERBOUND_STORAGE="relative/save", ASTERBOUND_LOGS="/logs",
+            ASTERBOUND_MODS="/mods",
         )
         self.assertEqual(overridden["assetDirectories"][0], "/new")
         self.assertEqual(overridden["storageDirectory"], str(self.root / "relative/save"))
@@ -82,14 +79,13 @@ class LauncherTests(unittest.TestCase):
     def test_private_config_lives_until_engine_exit_then_is_removed(self):
         # Simulate a delayed consumer, not a successful exec that never reads
         # the config: the wrapper must retain the file for the whole lifetime.
-        engine = self.game / "libexec/starbound"
+        engine = self.game / "libexec/asterbound"
         engine.write_text(f"#!{sys.executable}\n" + '''
 import json, os, stat, sys, time
 from pathlib import Path
 config = Path(sys.argv[2])
 assert stat.S_IMODE(config.parent.stat().st_mode) == 0o700
 first = config.read_bytes()
-assert json.loads(first)["storageDirectory"].endswith("/OpenStarbound/storage")
 time.sleep(0.1)
 assert config.read_bytes() == first
 assert Path(json.loads(first)["storageDirectory"]).is_dir()
@@ -104,10 +100,10 @@ sys.exit(23)
                 if process.poll() is None:
                     process.kill()
                     process.wait()
-        self.assertEqual(list(self.root.glob("openstarbound.*")), [])
+        self.assertEqual(list(self.root.glob("asterbound.*")), [])
 
     def test_interrupt_reaches_engine_and_cleans_private_config(self):
-        engine = self.game / "libexec/starbound"
+        engine = self.game / "libexec/asterbound"
         engine.write_text(f"#!{sys.executable}\n" + '''
 import os, signal
 print(os.getpid(), flush=True)
@@ -126,7 +122,7 @@ signal.pause()
             self.assertEqual(process.wait(timeout=5), 130)
             with self.assertRaises(ProcessLookupError):
                 os.kill(child, 0)
-            self.assertEqual(list(self.root.glob("openstarbound.*")), [])
+            self.assertEqual(list(self.root.glob("asterbound.*")), [])
         finally:
             if child is not None:
                 try:

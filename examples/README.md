@@ -11,7 +11,17 @@ This directory contains example configurations for using packages from fleurs-nu
 
 ### Method 1: NixOS Module (Recommended)
 
-The easiest way to use OpenStarbound is with the NixOS module:
+The easiest way to use Asterbound is with the NixOS module:
+
+On x86_64, allow the package and upstream Steam SDK derivation in the importing
+nixpkgs configuration (Steam integration is on; Discord is off by default):
+
+```nix
+nixpkgs.config.allowUnfreePredicate = p:
+  builtins.elem (pkgs.lib.getName p) [ "asterbound" "openstarbound-sdks" ];
+```
+
+ARM64 uses no proprietary SDKs.
 
 ```nix
 # flake.nix
@@ -21,9 +31,9 @@ The easiest way to use OpenStarbound is with the NixOS module:
   outputs = { nixpkgs, fleurs-nur, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       modules = [
-        fleurs-nur.nixosModules.openstarbound
+        fleurs-nur.nixosModules.asterbound
         {
-          programs.openstarbound.enable = true;
+          programs.asterbound.enable = true;
         }
       ];
     };
@@ -44,10 +54,10 @@ For more control over the package:
   ];
 
   environment.systemPackages = [
-    (pkgs.openstarbound.override {
+    (pkgs.asterbound.override {
       starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-      storageDir = "$HOME/.local/share/OpenStarbound/storage";
-      modDir = "$HOME/.local/share/OpenStarbound/mods";
+      storageDir = "$HOME/.local/share/asterbound/storage";
+      modDir = "$HOME/.local/share/asterbound/mods";
     })
   ];
 }
@@ -64,25 +74,25 @@ For more control over the package:
     };
   };
 
-  environment.systemPackages = [ pkgs.nur.repos.fleurs.openstarbound ];
+  environment.systemPackages = [ pkgs.nur.repos.fleurs.asterbound ];
 }
 ```
 
-## OpenStarbound Configuration
+## Asterbound Configuration
 
 ### Using the Module
 
 The NixOS module provides declarative configuration:
 
 ```nix
-programs.openstarbound = {
+programs.asterbound = {
   enable = true;
   starboundAssetsPath = "$HOME/.local/share/Steam/steamapps/common/Starbound/assets";
-  storageDir = "/mnt/games/OpenStarbound/storage";
-  logDir = "/mnt/games/OpenStarbound/logs";
-  modDir = "/mnt/games/OpenStarbound/mods";
+  storageDir = "/mnt/games/asterbound/storage";
+  logDir = "/mnt/games/asterbound/logs";
+  modDir = "/mnt/games/asterbound/mods";
   extraAssetDirs = [
-    "$HOME/OpenStarbound/workshop-content"
+    "$HOME/asterbound/workshop-content"
   ];
 };
 ```
@@ -92,7 +102,7 @@ programs.openstarbound = {
 For package-level customization:
 
 ```nix
-pkgs.openstarbound.override {
+pkgs.asterbound.override {
   starboundAssetsPath = "/path/to/assets";
   storageDir = "/path/to/storage";
   logDir = "/path/to/logs";
@@ -105,9 +115,17 @@ Use `.override`; there is no `withPaths` convenience function.
 With either module, a non-null `package` is used unchanged, so apply path and
 desktop metadata options to that package with `.override`.
 
-Defaults preserve `$XDG_DATA_HOME/OpenStarbound/{storage,logs,mods}` (capital O/S),
-falling back to `$HOME/.local/share/OpenStarbound`. Runtime overrides and literal
+Defaults use independent `$XDG_DATA_HOME/asterbound/{storage,logs,mods}`,
+falling back to `$HOME/.local/share/asterbound`. Runtime overrides and literal
 path-prefix handling are documented in the [packaging guide](../README.md#paths-and-runtime-overrides).
+`ASTERBOUND_RUNTIME_DIR` overrides the default runtime data root, including assets.
+Commercial assets default to `$XDG_DATA_HOME/asterbound/assets`, not the Steam install;
+copy owned assets there or explicitly set `starboundAssetsPath` as shown below.
+No old writable directories are reused or automatically migrated.
+For an explicit independent copy, run `asterbound-import-openstarbound SOURCE [TARGET]`:
+it copies assets/mods/storage, dereferences symlinks, skips sbinit/logs, and never
+deletes the source. Nonempty, same, nested or cyclic destinations/sources are refused;
+a failed copy can leave a partial destination.
 The package owns desktop/icon files; no manual Home Manager `home.file` entries
 are required.
 
@@ -116,7 +134,7 @@ are required.
 ### Flatpak Steam
 
 ```nix
-programs.openstarbound = {
+programs.asterbound = {
   enable = true;
   starboundAssetsPath = "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Starbound/assets";
 };
@@ -125,9 +143,9 @@ programs.openstarbound = {
 ### External Drive
 
 ```nix
-programs.openstarbound = {
+programs.asterbound = {
   enable = true;
-  storageDir = "/mnt/games/OpenStarbound/storage";
-  modDir = "/mnt/games/OpenStarbound/mods";
+  storageDir = "/mnt/games/asterbound/storage";
+  modDir = "/mnt/games/asterbound/mods";
 };
 ```

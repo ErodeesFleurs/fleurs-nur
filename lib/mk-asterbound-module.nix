@@ -1,4 +1,4 @@
-# Shared factory for the NixOS and Home Manager OpenStarbound modules.
+# Shared factory for the NixOS and Home Manager Asterbound modules.
 # Both flavors expose identical options and build the package the same
 # way; only the option namespace path and the enabled-system config differ.
 #
@@ -15,13 +15,13 @@
 { lib, pkgs, config, ... }:
 
 let
-  cfg = lib.getAttrFromPath (path ++ [ "openstarbound" ]) config;
+  cfg = lib.getAttrFromPath (path ++ [ "asterbound" ]) config;
 
-  openstarboundPackage =
+  asterboundPackage =
     if cfg.package != null then
       cfg.package
     else
-      pkgs.callPackage ../pkgs/openstarbound {
+      pkgs.callPackage ../pkgs/asterbound {
         inherit (cfg)
           starboundAssetsPath
           storageDir
@@ -49,15 +49,15 @@ let
 in
 {
   options = lib.setAttrByPath path {
-    openstarbound = {
-      enable = lib.mkEnableOption "OpenStarbound, an open-source Starbound client with improvements";
+    asterbound = {
+      enable = lib.mkEnableOption "Asterbound, an independent Starbound-compatible game client";
 
       package = lib.mkOption {
         type = lib.types.nullOr lib.types.package;
         default = null;
-        example = lib.literalExpression "pkgs.openstarbound";
+        example = lib.literalExpression "pkgs.asterbound";
         description = ''
-          The OpenStarbound package to use. If null, a package will be built
+          The Asterbound package to use. If null, a package will be built
           with all options below. A custom package is used unchanged; configure
           its paths and desktop metadata with package.override instead.
         '';
@@ -70,38 +70,43 @@ in
         - Steam: $HOME/.local/share/Steam/steamapps/common/Starbound/assets
         - Flatpak Steam: $HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Starbound/assets
 
-        If null, uses the default Steam location.
-        OPENSTARBOUND_ASSETS overrides this option at runtime.
+        If null, uses $ASTERBOUND_RUNTIME_DIR/assets when set, otherwise
+        $XDG_DATA_HOME/asterbound/assets; XDG_DATA_HOME defaults to $HOME/.local/share.
+        ASTERBOUND_ASSETS overrides this option at runtime.
       '';
 
-      storageDir = mkPathOption "$HOME/.local/share/OpenStarbound/storage" ''
+      storageDir = mkPathOption "$HOME/.local/share/asterbound/storage" ''
         Directory for game saves and universe data.
-        If null, uses XDG_DATA_HOME/OpenStarbound/storage.
-        OPENSTARBOUND_STORAGE overrides this option at runtime.
+        These independent saves are not automatically imported from another game.
+        If null, uses $ASTERBOUND_RUNTIME_DIR/storage when set, otherwise
+        $XDG_DATA_HOME/asterbound/storage; XDG_DATA_HOME defaults to $HOME/.local/share.
+        ASTERBOUND_STORAGE overrides this option at runtime.
       '';
 
-      logDir = mkPathOption "$HOME/.local/share/OpenStarbound/logs" ''
+      logDir = mkPathOption "$HOME/.local/share/asterbound/logs" ''
         Directory for game log files.
-        If null, uses XDG_DATA_HOME/OpenStarbound/logs.
-        OPENSTARBOUND_LOGS overrides this option at runtime.
+        If null, uses $ASTERBOUND_RUNTIME_DIR/logs when set, otherwise
+        $XDG_DATA_HOME/asterbound/logs; XDG_DATA_HOME defaults to $HOME/.local/share.
+        ASTERBOUND_LOGS overrides this option at runtime.
       '';
 
-      modDir = mkPathOption "$HOME/.local/share/OpenStarbound/mods" ''
+      modDir = mkPathOption "$HOME/.local/share/asterbound/mods" ''
         Directory for custom mods.
-        If null, uses XDG_DATA_HOME/OpenStarbound/mods.
-        OPENSTARBOUND_MODS overrides this option at runtime.
+        If null, uses $ASTERBOUND_RUNTIME_DIR/mods when set, otherwise
+        $XDG_DATA_HOME/asterbound/mods; XDG_DATA_HOME defaults to $HOME/.local/share.
+        ASTERBOUND_MODS overrides this option at runtime.
       '';
 
       extraAssetDirs = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
         example = [
-          "$HOME/OpenStarbound/custom-assets"
+          "$HOME/asterbound/custom-assets"
           "/mnt/shared/starbound-mods"
         ];
         description = ''
           Additional asset directories to load after the commercial assets
-          and bundled opensb assets, and before the mods directory.
+          and bundled asterbound and asterbound-compat assets, and before the mods directory.
           Paths support only literal leading $HOME, ''${HOME}, ~/,
           $XDG_DATA_HOME or ''${XDG_DATA_HOME}; other text is literal.
           No shell expressions are evaluated.
@@ -129,7 +134,7 @@ in
   config = lib.mkIf cfg.enable (
     mkConfig {
       inherit lib cfg;
-      package = openstarboundPackage;
+      package = asterboundPackage;
     }
   );
 }

@@ -3,9 +3,8 @@ set -euo pipefail
 export PATH="@runtimePath@${PATH:+:$PATH}"
 
 binary="@game@/libexec/${0##*/}"
-[[ ${0##*/} != openstarbound ]] || binary="@game@/libexec/starbound"
 # Standalone launches do not inherit Steam's application identity.
-if [[ ${binary##*/} == starbound ]]; then
+if [[ ${binary##*/} == asterbound ]]; then
   export SteamAppId="${SteamAppId:-211820}"
 fi
 for arg in "$@"; do
@@ -22,7 +21,7 @@ mapfile -d '' -t defaults < <(jq -j '
    .modDir // "", .extraAssetDirs[]] | .[] | ., "\u0000"
 ' '@defaults@')
 data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
-runtime_dir="${OPENSTARBOUND_RUNTIME_DIR:-$data_home/OpenStarbound}"
+runtime_dir="${ASTERBOUND_RUNTIME_DIR:-$data_home/asterbound}"
 
 # Expand only documented leading home/data prefixes. No eval, command
 # substitution or general environment interpolation of configuration strings.
@@ -41,15 +40,15 @@ expand_path() {
   esac
   [[ "$REPLY" == /* ]] || REPLY="$PWD/$REPLY"
 }
-expand_path "${OPENSTARBOUND_ASSETS:-${defaults[0]:-$HOME/.local/share/Steam/steamapps/common/Starbound/assets}}"
+expand_path "${ASTERBOUND_ASSETS:-${defaults[0]:-$runtime_dir/assets}}"
 assets="$REPLY"
-expand_path "${OPENSTARBOUND_STORAGE:-${defaults[1]:-$runtime_dir/storage}}"
+expand_path "${ASTERBOUND_STORAGE:-${defaults[1]:-$runtime_dir/storage}}"
 storage="$REPLY"
-expand_path "${OPENSTARBOUND_LOGS:-${defaults[2]:-$runtime_dir/logs}}"
+expand_path "${ASTERBOUND_LOGS:-${defaults[2]:-$runtime_dir/logs}}"
 logs="$REPLY"
-expand_path "${OPENSTARBOUND_MODS:-${defaults[3]:-$runtime_dir/mods}}"
+expand_path "${ASTERBOUND_MODS:-${defaults[3]:-$runtime_dir/mods}}"
 mods="$REPLY"
-asset_dirs=("$assets" '@game@/share/openstarbound/assets')
+asset_dirs=("$assets" '@game@/share/asterbound/assets')
 for dir in "${defaults[@]:4}"; do
   expand_path "$dir"
   asset_dirs+=("$REPLY")
@@ -69,12 +68,12 @@ for arg in "$@"; do
   [[ "$arg" != -- ]] || break
 done
 
-mkdir -p -- "$storage" "$logs" "$mods"
+mkdir -p -- "$assets" "$storage" "$logs" "$mods"
 # Each invocation owns a private random directory. No predictable shared file
 # or symlink target; keep the config alive until the engine has exited.
 temp_root="${TMPDIR:-/tmp}"
 [[ "$temp_root" == /* ]] || temp_root="$PWD/$temp_root"
-config_dir=$(mktemp -d "$temp_root/openstarbound.XXXXXXXXXX")
+config_dir=$(mktemp -d "$temp_root/asterbound.XXXXXXXXXX")
 trap 'rm -rf -- "$config_dir"' EXIT
 print_config > "$config_dir/sbinit.config"
 

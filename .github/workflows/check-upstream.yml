@@ -1,6 +1,6 @@
-name: "Check OpenStarbound upstream"
+name: "Check Asterbound upstream"
 
-# OpenStarbound is tracked as a pinned nightly rev. This workflow compares
+# Asterbound is tracked at a pinned full revision. This workflow compares
 # the pinned rev against the upstream default branch and opens or updates
 # an issue when upstream has moved, so the package never silently rots.
 
@@ -31,18 +31,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          PINNED=$(sed -n 's/^[[:space:]]*rev = "\([0-9a-fA-F]\{40\}\)";.*/\1/p' pkgs/openstarbound/game.nix)
+          PINNED=$(sed -n 's/^[[:space:]]*rev = "\([0-9a-fA-F]\{40\}\)";.*/\1/p' pkgs/asterbound/game.nix)
           if [[ ! "$PINNED" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            echo "::error::Expected one full pinned SHA in pkgs/openstarbound/game.nix"
+            echo "::error::Expected one full pinned SHA in pkgs/asterbound/game.nix"
             exit 1
           fi
 
           UPSTREAM=$(curl -fsSL \
             -H "Authorization: Bearer $GH_TOKEN" \
-            https://api.github.com/repos/ErodeesFleurs/OpenStarbound/commits/HEAD \
+            https://api.github.com/repos/ErodeesFleurs/Asterbound/commits/HEAD \
             | jq -er '.sha | select(type == "string")')
           if [[ ! "$UPSTREAM" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            echo "::error::Fork API did not return a full commit SHA"
+            echo "::error::Asterbound API did not return a full commit SHA"
             exit 1
           fi
           UPSTREAM_SHORT="${UPSTREAM:0:${#PINNED}}"
@@ -54,10 +54,10 @@ jobs:
             exit 0
           fi
 
-          TITLE="OpenStarbound upstream moved to ${UPSTREAM:0:7}"
-          BODY=$(printf 'ErodeesFleurs/OpenStarbound default branch is now at `%s`.\n\nThis repo pins `%s` in `pkgs/openstarbound/game.nix`; the package version is inherited from the pinned build definition.\n\nTo update: bump `rev`, refresh the fetch hash, review the fork build inputs and wrapper compatibility, then rebuild and run `openstarbound.tests.launcher`.' "$UPSTREAM" "$PINNED")
+          TITLE="Asterbound upstream moved to ${UPSTREAM:0:7}"
+          BODY=$(printf "ErodeesFleurs/Asterbound default branch is now at \`%s\`.\n\nThis repo pins \`%s\` in \`pkgs/asterbound/game.nix\`; the package version is inherited from the pinned source version.json via nix/asterbound.nix.\n\nTo update: bump \`rev\`, refresh the fetch hash, review the upstream build inputs and wrapper compatibility, then rebuild and run \`asterbound.tests.launcher\`." "$UPSTREAM" "$PINNED")
 
-          EXISTING=$(gh issue list --state open --search "OpenStarbound upstream moved in:title" --json number --jq '.[0].number // empty')
+          EXISTING=$(gh issue list --state open --search "Asterbound upstream moved in:title" --json number --jq '.[0].number // empty')
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
           else
