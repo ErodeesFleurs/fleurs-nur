@@ -79,11 +79,11 @@ Available options
 ## Asterbound packaging
 
 The engine is pinned to [ErodeesFleurs/Asterbound](https://github.com/ErodeesFleurs/Asterbound)
-at full revision `92d59a8b321f6b0127505160afae096b203e9c1e`,
-with source hash `sha256-W15hzw6gCvRAPN7hRmacJgCg/JO03Hgdn+SaLmqysKk=`.
+at full revision `db11ebe4e0764efdac038275755210d509a0293a`,
+with source hash `sha256-fHTpA2pt2UiZpo7W3wLw+oSarLBhhXwliJJbd581McM=`.
 `pkgs/asterbound/game.nix` defines the source pin. The pinned source's
 `version.json` records the independent product version `0.1.0.0`, bundled asset
-version `0.1.15.1`, and base Starbound version `1.4.4`; these are not interchangeable.
+version `0.1.0.0`, and base Starbound version `1.4.4`; these are not interchangeable.
 The package version is read by upstream `nix/asterbound.nix`, not duplicated in
 the wrapper. Packaging imports that source's `nix/dependencies.nix` and
 `nix/asterbound.nix` with the caller's nixpkgs rather than maintaining a second
@@ -146,12 +146,13 @@ literal interpolation prefix as `''${HOME}`; in double-quoted Nix strings use
 
 Boot configuration is serialized with `jq`, preserving quotes, backslashes and
 other JSON-sensitive characters without evaluating path contents. Asset scan order
-is commercial assets, bundled `asterbound` and `asterbound-compat`, `extraAssetDirs`
-in order, then mods; the engine also applies asset metadata priorities and
-dependencies. The physical upstream directories `assets/asterbound` and
-`assets/asterbound-compat` are installed under `share/asterbound/assets`.
-Virtual `opensb` paths and metadata identities such as `opensb_base` and
-`opensb_compat` remain compatibility contracts, not stale product branding.
+is commercial assets, bundled sources, `extraAssetDirs` in order, then mods;
+the engine also applies asset metadata priorities and dependencies. The bundled
+directories `asterbound`, `asterbound-compat`, and `asterbound-legacy` are installed
+under `share/asterbound/assets`. The primary and compatibility source identities
+are now `asterbound_base` and `asterbound_compat`. The metadata-only
+`asterbound-legacy` source supplies an `opensb_base` dependency marker requiring
+`asterbound_base`; it does not restore old asset paths, APIs, or `opensb_compat`.
 The commands `asterbound` and `asterbound_server` use the wrapper;
 `--print-bootconfig` prints its generated configuration. An explicit
 `-bootconfig` is passed through instead of replacing the supplied configuration.
@@ -207,8 +208,10 @@ target or deliberately removing that partial copy; rerunning does not merge it.
 
 If the old runtime has no commercial assets, provide them in the new `assets`
 directory or configure `starboundAssetsPath`/`ASTERBOUND_ASSETS` explicitly before
-launching. Importing data and preserving virtual asset identities do not promise
-compatibility with every OpenStarbound version, mod, save, or multiplayer server.
+launching. Remove old OpenStarbound bundled sources from the copied assets/mods:
+they do not replace the renamed Asterbound sources and can apply duplicate patches.
+Importing data does not promise compatibility with every OpenStarbound version,
+mod, save, or multiplayer server.
 
 See [configuration examples](examples/README.md). The weekly tracking workflow
 compares the pin against Asterbound's default branch and opens an issue; it does not

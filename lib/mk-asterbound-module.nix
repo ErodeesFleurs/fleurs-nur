@@ -106,7 +106,8 @@ in
         ];
         description = ''
           Additional asset directories to load after the commercial assets
-          and bundled asterbound and asterbound-compat assets, and before the mods directory.
+          and bundled asterbound, asterbound-compat, and asterbound-legacy sources,
+          and before the mods directory.
           Paths support only literal leading $HOME, ''${HOME}, ~/,
           $XDG_DATA_HOME or ''${XDG_DATA_HOME}; other text is literal.
           No shell expressions are evaluated.
