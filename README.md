@@ -79,11 +79,11 @@ Available options
 ## Asterbound packaging
 
 The engine is pinned to [ErodeesFleurs/Asterbound](https://github.com/ErodeesFleurs/Asterbound)
-at full revision `27b0a472a6c9f158daf82fe147dcf7464308ed82`,
-with source hash `sha256-8/U90At4SUaOvfo6j1nOuRBYjlu2IBMoXJvSiGYACG8=`.
+at full revision `6ae4a50a4cda8eb2a6438b96ceab0d15bbad0d96`,
+with source hash `sha256-ScS0DAHqR8q4/plMwnNuA2RtfEZOearlIKBPlpp+Bn0=`.
 `pkgs/asterbound/game.nix` defines the source pin. The pinned source's
-`version.json` records the independent product version `0.1.1.0`, bundled asset
-version `0.1.0.1`, and base Starbound version `1.4.4`; these are not interchangeable.
+`version.json` records the independent product version `0.1.2.1`, bundled asset
+version `0.1.2.1`, and base Starbound version `1.4.4`; these are not interchangeable.
 The package version is read by upstream `nix/asterbound.nix`, not duplicated in
 the wrapper. Packaging imports that source's `nix/dependencies.nix` and
 `nix/asterbound.nix` with the caller's nixpkgs rather than maintaining a second
@@ -91,6 +91,10 @@ dependency/build recipe.
 The wrapper's `passthru.heavy` exposes raw binaries, tools and assets. Game launchers
 are installed only by the final package; the upstream shared-config scripts are
 not installed in the heavy output.
+
+The GUI uses Vulkan by default and also includes OpenGL. Select a backend with
+`asterbound -renderer vulkan` or `asterbound -renderer opengl`; the explicit
+flag takes precedence over `ASTERBOUND_RENDERER`. Both use the same package.
 
 This is not a freely licensed replacement for the commercial game: the pinned
 source does not grant a top-level license. Consult its installed
