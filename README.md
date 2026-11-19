@@ -79,8 +79,8 @@ Available options
 ## Asterbound packaging
 
 The engine is pinned to [ErodeesFleurs/Asterbound](https://github.com/ErodeesFleurs/Asterbound)
-at full revision `05c3fc7963662943688b1efbbacea0b4364694f0`,
-with source hash `sha256-8zeLR90sOdLEqh6lruH8rHZnMUnwLp82rSlc8gBPThg=`.
+at full revision `1069b0ad22b37ef47c1f337c648d5950c16a4ee7`,
+with source hash `sha256-Y7egjW+NsSdm6BfUTDjh9PgPVfFkODinxmgjb+8ydIk=`.
 `pkgs/asterbound/game.nix` defines the source pin. The pinned source's
 `version.json` records the independent product version `0.1.2.2`, bundled asset
 version `0.1.2.2`, and base Starbound version `1.4.4`; these are not interchangeable.
