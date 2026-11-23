@@ -79,15 +79,18 @@ Available options
 ## Asterbound packaging
 
 The engine is pinned to [ErodeesFleurs/Asterbound](https://github.com/ErodeesFleurs/Asterbound)
-at full revision `1069b0ad22b37ef47c1f337c648d5950c16a4ee7`,
-with source hash `sha256-Y7egjW+NsSdm6BfUTDjh9PgPVfFkODinxmgjb+8ydIk=`.
+at full revision `fc7d633d26e76757112f442c8967e5a3b1572113`,
+with source hash `sha256-y8xo5HrOfAtvG+o7HFawTTos5XbH+FSZuTfeBW3Lxlw=`.
 `pkgs/asterbound/game.nix` defines the source pin. The pinned source's
-`version.json` records the independent product version `0.1.2.2`, bundled asset
-version `0.1.2.2`, and base Starbound version `1.4.4`; these are not interchangeable.
+`version.json` records the independent product version `0.1.3.0`, bundled asset
+version `0.1.3.0`, and base Starbound version `1.4.4`; these are not interchangeable.
 The package version is read by upstream `nix/asterbound.nix`, not duplicated in
 the wrapper. Packaging imports that source's `nix/dependencies.nix` and
 `nix/asterbound.nix` with the caller's nixpkgs rather than maintaining a second
 dependency/build recipe.
+For CPR, packaging preserves upstream's minimum version `1.14.2` and requests
+the actual dependency version in CMake. CPR's `SamePatchVersion` package policy
+otherwise rejects newer caller-provided releases such as `1.15.1`.
 The wrapper's `passthru.heavy` exposes raw binaries, tools and assets. Game launchers
 are installed only by the final package; the upstream shared-config scripts are
 not installed in the heavy output.

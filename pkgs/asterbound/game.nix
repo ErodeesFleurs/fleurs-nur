@@ -1,17 +1,20 @@
 { pkgs, fetchFromGitHub }:
 
 let
-  rev = "1069b0ad22b37ef47c1f337c648d5950c16a4ee7";
+  rev = "fc7d633d26e76757112f442c8967e5a3b1572113";
   src = fetchFromGitHub {
     owner = "ErodeesFleurs";
     repo = "Asterbound";
     inherit rev;
-    hash = "sha256-Y7egjW+NsSdm6BfUTDjh9PgPVfFkODinxmgjb+8ydIk=";
+    hash = "sha256-y8xo5HrOfAtvG+o7HFawTTos5XbH+FSZuTfeBW3Lxlw=";
   };
   dependencies = import "${src}/nix/dependencies.nix" { inherit pkgs; };
 in
+assert pkgs.lib.assertMsg (
+  pkgs.lib.versionAtLeast dependencies.libcpr.version "1.14.2"
+) "Asterbound requires CPR 1.14.2 or newer.";
 # Keep the compiler, static C++ dependencies, Lua patches and checks together.
-# Replacing upstream's CMakeLists breaks this fork's C++23/runtime contract.
+# Replacing upstream's whole CMakeLists breaks its C++23/runtime contract.
 (pkgs.callPackage "${src}/nix/asterbound.nix" {
   inherit src dependencies;
   stdenv = dependencies.stdenv;
@@ -19,6 +22,13 @@ in
   steamSupport = pkgs.stdenv.hostPlatform.isx86_64;
 }).overrideAttrs
   (old: {
+    # CPR's SamePatchVersion policy rejects newer releases. Preserve the
+    # minimum above, but request the actual matching headers/library version.
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace source/CMakeLists.txt \
+        --replace-fail 'find_package(cpr 1.14.2 CONFIG REQUIRED)' \
+        'find_package(cpr ${dependencies.libcpr.version} CONFIG REQUIRED)'
+    '';
     # Upstream exports every executable symbol. Its static mimalloc new operators
     # then interpose on Mesa/LLVM's libstdc++ without matching scalar deletes,
     # causing an invalid free during GL driver initialization.
