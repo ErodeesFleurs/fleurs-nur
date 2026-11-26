@@ -79,11 +79,11 @@ Available options
 ## Asterbound packaging
 
 The engine is pinned to [ErodeesFleurs/Asterbound](https://github.com/ErodeesFleurs/Asterbound)
-at full revision `efe1057f1b6cd48a91216d4ef88429db972169a2`,
-with source hash `sha256-8yB3PNdKv0R+GTiZOC9/CnMYaweolS7BzB4ujogI5sU=`.
+at full revision `48fd6c2a0aacf127484ad9c3ca399c570aba71d9`,
+with source hash `sha256-AWYTpvTFkuMHiSIQvIaQI6WIybBtcaw4BjZ0KAw7AMo=`.
 `pkgs/asterbound/game.nix` defines the source pin. The pinned source's
-`version.json` records the independent product version `0.1.3.0`, bundled asset
-version `0.1.3.0`, and base Starbound version `1.4.4`; these are not interchangeable.
+`version.json` records the independent product version `0.1.4.1`, bundled asset
+version `0.1.4.1`, and base Starbound version `1.4.4`; these are not interchangeable.
 The package version is read by upstream `nix/asterbound.nix`, not duplicated in
 the wrapper. Packaging imports that source's `nix/dependencies.nix` and
 `nix/asterbound.nix` with the caller's nixpkgs rather than maintaining a second

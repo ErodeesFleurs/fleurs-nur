@@ -1,12 +1,12 @@
 { pkgs, fetchFromGitHub }:
 
 let
-  rev = "efe1057f1b6cd48a91216d4ef88429db972169a2";
+  rev = "48fd6c2a0aacf127484ad9c3ca399c570aba71d9";
   src = fetchFromGitHub {
     owner = "ErodeesFleurs";
     repo = "Asterbound";
     inherit rev;
-    hash = "sha256-8yB3PNdKv0R+GTiZOC9/CnMYaweolS7BzB4ujogI5sU=";
+    hash = "sha256-AWYTpvTFkuMHiSIQvIaQI6WIybBtcaw4BjZ0KAw7AMo=";
   };
   dependencies = import "${src}/nix/dependencies.nix" { inherit pkgs; };
 in

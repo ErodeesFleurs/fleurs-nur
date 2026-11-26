@@ -60,8 +60,8 @@ stdenvNoCC.mkDerivation {
       ln -s ${desktop}/share/applications "$out/share/applications"
     ''}
     ${lib.optionalString installIcon ''
-      # The ICO contains separately drawn small ASCII icons, not downscaled
-      # copies of the 1024px application PNG.
+      # Install the ICO's native icon sizes instead of downscaling
+      # the application PNG.
       ${python3.withPackages (p: [ p.pillow ])}/bin/python3 - \
         ${game.src}/source/client/asterbound.ico "$out/share/icons/hicolor" <<'PY'
       from pathlib import Path
